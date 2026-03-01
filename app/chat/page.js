@@ -1,14 +1,23 @@
 "use client";
 
+import { ThemeContext } from "@/components/ThemeRegister";
 import {
+  AppBar,
   Box,
-  Button,
+  IconButton,
   Paper,
   Skeleton,
   TextField,
   Typography,
 } from "@mui/material";
-import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import ContrastIcon from "@mui/icons-material/Contrast";
+import { useState, useRef, useEffect, useContext } from "react";
+import { ArrowBackIos, Send } from "@mui/icons-material";
+import Message from "@/components/Message";
+import Markdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 
 export default function ChatPage() {
   const [message, setMessage] = useState("");
@@ -16,6 +25,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
 
   const bottomRef = useRef(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,6 +48,7 @@ export default function ChatPage() {
       });
 
       const data = await res.json();
+      console.log(data);
 
       setChat((prev) => [...prev, { ai: data.reply || "Ошибка ответа" }]);
     } catch (err) {
@@ -46,27 +58,54 @@ export default function ChatPage() {
     setLoading(false);
   }
 
+  const { toggleColorMode } = useContext(ThemeContext);
+
+  const toggleBodyClass = () => {
+    document.body.classList.toggle("dark");
+    toggleColorMode();
+  };
+
   return (
     <Box
       sx={{
-        height: "calc(100vh - 100px)",
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "#f5f7fa",
       }}
     >
       {/* Header */}
-      <Box
+      <AppBar
+        position="static"
         sx={{
           p: 2,
-          backgroundColor: "#1976d2",
-          color: "white",
-          textAlign: "center",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "#0f172a" : "white",
+          color: (theme) => (theme.palette.mode === "dark" ? "white" : "black"),
           fontWeight: 600,
         }}
       >
-        AI Chat Demo
-      </Box>
+        <Typography variant="h5" fontWeight={"bolder"}>
+          AI Chat Demo
+        </Typography>
+        <IconButton
+          onClick={toggleBodyClass}
+          sx={{
+            ml: "auto",
+          }}
+        >
+          <ContrastIcon />
+        </IconButton>
+        <IconButton
+          sx={{ p: 1, borderRadius: 1000 }}
+          onClick={() => router.back()}
+        >
+          <ArrowBackIos /> Back
+        </IconButton>
+      </AppBar>
 
       {/* Messages */}
       <Box
@@ -77,30 +116,32 @@ export default function ChatPage() {
           display: "flex",
           flexDirection: "column",
           gap: 1.5,
+          backgroundImage: (theme) =>
+            theme.palette.mode === "dark"
+              ? `linear-gradient(to right, #ff00ff2f, #6a00ff2c)`
+              : `linear-gradient(to right, #bcc0ff94, #d1c0ff90)`,
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
         }}
       >
         {chat.map((msg, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: "flex",
-              justifyContent: msg.user ? "flex-end" : "flex-start",
-            }}
-          >
-            <Paper
-              elevation={2}
-              sx={{
-                p: 1.5,
-                maxWidth: "70%",
-                borderRadius: 3,
-                backgroundColor: msg.user ? "#1976d2" : "white",
-                color: msg.user ? "white" : "black",
-              }}
-            >
-              <Typography variant="body1">{msg.user || msg.ai}</Typography>
-            </Paper>
-          </Box>
+          <Message key={index} isUser={!!msg.user}>
+            {msg.user || msg.ai}
+          </Message>
         ))}
+        {!chat.length && (
+          <Box position={"absolute"} top={"20%"} left={0} right={0} p={2}>
+            <Typography
+              variant="h5"
+              color="textDisabled"
+              fontWeight={500}
+              textAlign={"center"}
+            >
+              Try out our demo chat with AI
+            </Typography>
+          </Box>
+        )}
 
         {loading && (
           // </Box>
@@ -109,7 +150,10 @@ export default function ChatPage() {
             sx={{
               p: 1.5,
               maxWidth: "70%",
-              borderRadius: 3,
+              borderRadius: "16px 16px 16px 3px",
+              boxShadow: "-5px 5px 0 #7979797f",
+              bgcolor: (t) =>
+                t.palette.mode === "dark" ? "#ffffff55" : "#ffffff",
             }}
           >
             <Skeleton sx={{ fontSize: "1rem" }} variant="text" />
@@ -128,13 +172,14 @@ export default function ChatPage() {
           borderTop: "1px solid #ddd",
           display: "flex",
           gap: 1,
-          backgroundColor: "white",
+          backgroundColor: (theme) =>
+            theme.palette.mode === "dark" ? "#0f172a" : "#ffffff",
         }}
       >
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Введите сообщение..."
+          placeholder="Enter message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
@@ -145,17 +190,27 @@ export default function ChatPage() {
           }}
         />
 
-        <Button
+        <IconButton
           variant="contained"
           onClick={sendMessage}
           disabled={loading}
+          // color="secondary"
           sx={{
             borderRadius: "30px",
-            px: 3,
+            px: 2,
+            bgcolor: (theme) => `secondary.${theme.palette.mode}`,
+            color: "#ffffff",
+            "&:hover svg": {
+              transform: "rotate(-30deg) translate(9px, -5px)",
+            },
+            "& svg": {
+              transition: "0.3s",
+              transform: "rotate(-30deg)",
+            },
           }}
         >
-          Send
-        </Button>
+          <Send style={{ marginLeft: 5 }} />
+        </IconButton>
       </Box>
     </Box>
   );

@@ -3,19 +3,19 @@
   --foreground: #171717;
 }
 */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
-/*
+} */
+
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
 }
-*/
+
 /* body {
   color: var(--foreground);
   background: var(--background);
@@ -23,21 +23,47 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 } */
-/*
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-*/
+
 a {
   color: inherit;
   font-family: Arial, Helvetica, sans-serif;
   text-decoration: none;
 }
-/*
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
   }
+}
+
+.dark {
+  background-color: #100f1e;
+}
+/* 
+body:not(.dark) header {
+  background-color: #b5d5ff;
+}
+
+.dark header {
+  background-color: #100f2f;
 } */
+
+/* Global for tables */
+table,
+td,
+th {
+  border: 1px solid black;
+}
+table {
+  border-collapse: collapse;
+}
+p {
+  margin: 0;
+}
+.dark {
+  table,
+  td,
+  th {
+    border: 1px solid white !important;
+  }
+}

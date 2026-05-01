@@ -53,6 +53,7 @@ table,
 td,
 th {
   border: 1px solid black;
+  min-width: 35px;
 }
 table {
   border-collapse: collapse;
@@ -65,5 +66,39 @@ p {
   td,
   th {
     border: 1px solid white !important;
+  }
+}
+
+table {
+  th,
+  td {
+    padding: 10px;
+    text-align: center;
+    /* &:not(:first-child):has(strong) {
+      background-color: rgba(128, 128, 128, 0.356);
+    } */
+  }
+  thead {
+    tr {
+      &:nth-child(odd) {
+        background-color: rgba(128, 128, 128, 0.356);
+      }
+    }
+  }
+  tbody {
+    tr {
+      &:nth-child(even) {
+        background-color: rgba(128, 128, 128, 0.356);
+      }
+    }
+  }
+}
+
+@media (width<700px) {
+  table {
+    th,
+    td {
+      padding: 6px !important;
+    }
   }
 }

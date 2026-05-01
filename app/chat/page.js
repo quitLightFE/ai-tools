@@ -1,23 +1,15 @@
 "use client";
 
 import { ThemeContext } from "@/components/ThemeRegister";
-import {
-  AppBar,
-  Box,
-  IconButton,
-  Paper,
-  Skeleton,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { AppBar, Box, IconButton, TextField, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 import ContrastIcon from "@mui/icons-material/Contrast";
 import { useState, useRef, useEffect, useContext } from "react";
 import { ArrowBackIos, Send } from "@mui/icons-material";
 import Message from "@/components/Message";
-import Markdown from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
-import remarkGfm from "remark-gfm";
+// import Markdown from "react-markdown";
+// import rehypeHighlight from "rehype-highlight";
+// import remarkGfm from "remark-gfm";
 
 export default function ChatPage() {
   const [message, setMessage] = useState("");
@@ -29,16 +21,26 @@ export default function ChatPage() {
   const router = useRouter();
 
   useEffect(() => {
+    const savedChat = localStorage.getItem("chat");
+
+    if (savedChat) {
+      setChat(JSON.parse(savedChat));
+    }
+  }, []);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    localStorage.setItem("chat", JSON.stringify(chat));
   }, [chat]);
 
   async function sendMessage() {
-    if (!message.trim()) return;
+    if (!message.trim() || loading) return;
 
     const userMessage = message;
-    setChat((prev) => [...prev, { user: userMessage }]);
     setMessage("");
     setLoading(true);
+
+    setChat((prev) => [...prev, { user: userMessage }, { ai: "" }]);
 
     try {
       const res = await fetch("/api/chat", {
@@ -47,12 +49,32 @@ export default function ChatPage() {
         headers: { "Content-Type": "application/json" },
       });
 
-      const data = await res.json();
-      console.log(data);
+      if (!res.body) throw new Error("No stream");
 
-      setChat((prev) => [...prev, { ai: data.reply || "Ошибка ответа" }]);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      let fullText = "";
+      while (true) {
+        // break
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        setChat((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { ai: fullText };
+          return updated;
+        });
+      }
+      // setChat((prev) => [...prev, { ai: data.reply || "Ошибка ответа" }]);
     } catch (err) {
-      setChat((prev) => [...prev, { ai: "Ошибка соединения" }]);
+      setChat((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { ai: "Ошибка соединения" };
+        return updated;
+      });
     }
 
     setLoading(false);
@@ -141,25 +163,6 @@ export default function ChatPage() {
               Try out our demo chat with AI
             </Typography>
           </Box>
-        )}
-
-        {loading && (
-          // </Box>
-          <Paper
-            elevation={2}
-            sx={{
-              p: 1.5,
-              maxWidth: "70%",
-              borderRadius: "16px 16px 16px 3px",
-              boxShadow: "-5px 5px 0 #7979797f",
-              bgcolor: (t) =>
-                t.palette.mode === "dark" ? "#ffffff55" : "#ffffff",
-            }}
-          >
-            <Skeleton sx={{ fontSize: "1rem" }} variant="text" />
-            <Skeleton sx={{ fontSize: "1rem" }} width={"80%"} variant="text" />
-            <Skeleton sx={{ fontSize: "1rem" }} width={"70%"} variant="text" />
-          </Paper>
         )}
 
         <div ref={bottomRef} />

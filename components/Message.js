@@ -32,6 +32,10 @@ export default function Message({ isUser, children }) {
                 : "#000000",
           boxShadow: isUser ? "5px 5px 0 #7979797f" : "-5px 5px 0 #7979797f",
           backdropFilter: "blur(4px)",
+          overflowX: "auto",
+          "&::-webkit-scrollbar": {
+            height: "5px",
+          },
         }}
       >
         {isUser ? (
